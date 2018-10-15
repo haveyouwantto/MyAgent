@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 //Info & Settings
-const version="2.6";
+const version="2.6-withkey";
 var settings={
 	looplimit: -1,//-1: no limit
 	port: 19131,
-	log: true
+	log: true,
+	key: "key"
 };
 var test=false;
 
@@ -137,7 +138,8 @@ wss.on('connection',
 function connection(ws) {
 	var wsi={
 		id: idp,
-		ws: ws
+		ws: ws,
+		keyv: false
 	};
 	idp++;
 	allws.push(wsi);
@@ -391,7 +393,7 @@ function connection(ws) {
 		}
 	}));
 	var retac=false;
-	serverinf("MyAgent Connected.\nYour ID: "+wsi.id+"\nType */help for get help.\n[MyAgent By LNSSPsd]");
+	serverinf("MyAgent Connected.\nYour ID: "+wsi.id+"\nKey verify is required.\nType */check [key] to verify your key..\n[MyAgent By LNSSPsd]");
 	/*gamecmd("agent create",ws);// /connect 127.0.0.1:19131
 	gamecmd("agent till forward",ws);*/
 
@@ -406,14 +408,29 @@ function connection(ws) {
 	
 	ws.on('message',
 	function (message) {
-		if(settings.log==true){
+		if(settings.log==true && wsi.keyv==true){
 		console.log("[Client ID%d] Received: %s",wsi.id, message);
 		}
 		if (JSON.parse(message).body.eventName == "PlayerMessage") {
 			if (JSON.parse(message).body.properties.MessageType == "me" || JSON.parse(message).body.properties.MessageType == "say") {
 				return;
 			}
+			if(wsi.keyv==false){
+				var spld;
+				try{spld=JSON.parse(message).body.properties.Message.split(" ");}catch(ex){spld=["a","b"];}
+				if(spld[0]!="*/check"){
+					serverinf("Please verify your key first!");return;
+				}
+				if(spld[1]!=settings.key){
+					serverinf("Invalid key!");
+					return;
+				}
+				serverinf("Key verify done.\nType */help for get help.");
+				wsi.keyv=true;
+			}
 		}
+
+		if(wsi.keyv==false){return;}
 
 		if (JSON.parse(message).header.messagePurpose == "commandResponse" && JSON.parse(message).header.requestId != "00000000-0001-0000-000000000000" && JSON.parse(message).header.requestId != "00000000-0fe1-0000-000000000000") {
 			serverinf("Command Response:\nMessage:" + JSON.parse(message).body.statusMessage);

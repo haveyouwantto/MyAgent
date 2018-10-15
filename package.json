@@ -1,7 +1,7 @@
 {
-  "name": "myagent",
+  "name": "myagent-withkey",
   "version": "2.6.0",
-  "description": "The agent generator & controller written in node.js",
+  "description": "The agent generator & controller written in node.js (With Key Feature).",
   "main": "myagent.js",
   "bin": {
     "myagent": "myagent.js",

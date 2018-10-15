@@ -1,4 +1,4 @@
-# MyAgent
+# MyAgent (With key)
 The Minecraft agent generator & controller written in node.js
 
 [![MyAgent](pmyagent.png)](https://github.com/mcpewebsocket-dev/MyAgent)
@@ -7,14 +7,7 @@ The Minecraft agent generator & controller written in node.js
 
 [![Discord](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.gg/ntaa8z8)
 [![CircleCI](https://circleci.com/gh/mcpewebsocket-dev/MyAgent.svg?style=svg)](https://circleci.com/gh/mcpewebsocket-dev/MyAgent)
-[![MyAgent NPM](https://img.shields.io/badge/npm-myagent-blue.svg)](https://www.npmjs.com/myagent)
 
-## Fast install
-Execute `npm i myagent -g` to install myagent.
-
-Execute `myagent` command to start myagent.
-
-`myagentctl` is the tool to change myagent's config.
 ## MyAgent Binary File
 You can download builded binary file of myagent in CircleCI.(Stopped Update)
 ## MyAgent Control
@@ -22,18 +15,12 @@ MyAgent Control can set the config of myagent.
 `myagentctl set <config> <value>` to set a config.
 
 `myagentctl rmconf` to remove config of myagent (back to default configs)
-## Execute myagent from source code
+## Run
 First,please execute following command:
 ```
 npm install
 ```
 Then,execute command:`node myagent.js`
-## Run
-Install Node.JS First,And then execute:
-```
-npm i myagent -g
-myagent
-```
 
 ## Connect
 type command in game:
