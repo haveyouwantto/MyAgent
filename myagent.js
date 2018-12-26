@@ -4,7 +4,7 @@
 const version = "3.1";
 var settings = {
 	looplimit: -1,//-1: no limit
-	port: 25565,
+	port: 19130,
 	log: true,
 	loopinterval: 500
 };
@@ -412,9 +412,11 @@ wss.on('connection',
 						log("<" + JSON.parse(message).body.properties.Sender + "> " + JSON.parse(message).body.properties.Message);
 					}
 				} else {
-
+                        
 					if (JSON.parse(message).body.statusMessage != undefined&&JSON.parse(message).body.statusCode!=-2147483648&&settings.log==true) {
 						serverinf("\u00a7d"+JSON.parse(message).body.statusMessage)
+					}else if (JSON.parse(message).body.statusMessage != undefined){
+						log(JSON.parse(message).body.statusMessage)
 					}
 				}
 			});
