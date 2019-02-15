@@ -6,14 +6,30 @@ var settings = {
 	looplimit: -1,//-1: no limit
 	port: 19130,
 	log: true,
-	loopinterval: 500
+	loopinterval: 500,
+	debug: false
 };
 var test = false;
 var fn = Date.now()
-var a=""
-function log(msg) {
-	console.log(Date() + " - " + msg)
-	a=a+(Date() + " - " + msg)+"\n"
+var a = ""
+function log(msg, type = "i") {
+	var c = "";
+	switch (type) {
+		case "i":
+			c = "\x1b[00m[INFO] ";
+			break;
+		case "w":
+			c = "\x1b[33m[WARN] ";
+			break;
+		case "e":
+			c = "\x1b[31m[ERROR] ";
+			break;
+		case "f":
+			c = "\x1b[41m[FATAL] ";
+			break;
+	}
+	console.log(c + new Date().toISOString() + " - " + msg + "\x1b[0m")
+	a = a + (c.substr(5)+new Date().toISOString() + " - " + msg) + "\n"
 }
 console.log("MyAgent v%s", version);
 console.log("Author: LNSSPsd");
@@ -21,7 +37,7 @@ console.log("https://github.com/mcpewebsocket-dev/MyAgent");
 console.log("https://npmjs.com/myagent");
 
 process.on("uncaughtException", function (error) {
-	console.log("[ERROR] uncaughtException: %s.", error.message);
+	console.log("[ERROR] uncaughtException: %s." , error.message);
 	process.exit(3);
 });
 
@@ -44,7 +60,7 @@ if (os.platform() == "win32") {//It only works in windows.
 		var network = os.networkInterfaces();
 		console.log("HOST: %s", network[Object.keys(network)[0]][1].address);
 	} catch (e) {
-		console.log("HOST: Unknown");
+		log("HOST: Unknown", "e");
 	}
 }
 
@@ -73,48 +89,69 @@ try {
 }
 
 console.log("");
-console.log("/connect " + network[Object.keys(network)[0]][1].address + ":" + settings.port)
+console.log("\x1b[33m/connect " + network[Object.keys(network)[0]][1].address + ":" + settings.port + "\x1b[0m")
 if (test == true) { process.exit(0); }
 var allws = [];
 var idp = 1;
 
 rl.on("line", function (line) {
-	log("> "+line)
-	if (line == "+log") {
-		settings.log = true;
-		log("[SET] log=true");
-		return;
-	}
-	if (line == "-log") {
-		settings.log = false;
-		log("[SET] log=false");
-		return;
-	}
-	if (line.substring(0, 8) == "-kickid ") {
-		try { findid(parseInt(line.split(" ")[1])).ws.terminate(); } catch (err) { console.log("[KickId] Failed."); return; }
-		log("[KickId] Success.");
-		return;
-	}
-
-	allws.forEach(function (e, i) {
+	log("> " + line)
+	if (line.substr(0, 3) == "/js") {
 		try {
-			e.ws.send(JSON.stringify({
-				"body": {
-					"origin": {
-						"type": "player"
+			eval(line.slice(4))
+		} catch (er) {
+			log(er, "e")
+		}
+	} else {
+		if (line == "+log") {
+			settings.log = true;
+			log("[SET] log=true");
+			return;
+		}
+		if (line == "-log") {
+			settings.log = false;
+			log("[SET] log=false");
+			return;
+		}
+		if (line == "+debug") {
+			settings.debug = true;
+			log("[SET] debug=true");
+			return;
+		}
+		if (line == "-debug") {
+			settings.debug = false;
+			log("[SET] debug=false");
+			return;
+		}
+		if (line.substring(0, 8) == "-kickid ") {
+			try { findid(parseInt(line.split(" ")[1])).ws.terminate(); } catch (err) { console.log("[KickId] Failed."); return; }
+			log("[KickId] Success.");
+			return;
+		}
+
+		allws.forEach(function (e, i) {
+			try {
+				e.ws.send(JSON.stringify({
+					"body": {
+						"origin": {
+							"type": "player"
+						},
+						"commandLine": line,
+						"version": 1
 					},
-					"commandLine": line,
-					"version": 1
-				},
-				"header": {
-					"requestId": "00000000-0001-0000-000000000000",
-					"messagePurpose": "commandRequest",
-					"version": 1,
-					"messageType": "commandRequest"
-				}
-			}));
-		} catch (ne) { allws.splice(i, 1); }
-	});
+					"header": {
+						"requestId": "00000000-0001-0000-000000000000",
+						"messagePurpose": "commandRequest",
+						"version": 1,
+						"messageType": "commandRequest"
+					}
+				}));
+			} catch (ne) {
+				allws.splice(i, 1);
+				console.log("Unable to send packets")
+			}
+		});
+	}
 });
 
 function shutdown() {
@@ -194,7 +231,7 @@ wss.on('connection',
 
 
 		function serverinf(msg) {
-			a=a+(Date() + " - " + msg)+"\n"
+			a = a + (Date() + " - " + msg) + "\n"
 			//console.log("[Server] %s",msg);
 			gamecmds("say " + msg);
 
@@ -406,18 +443,38 @@ wss.on('connection',
 
 		ws.on('message',
 			function (message) {
-				n = JSON.parse(message).body.eventName
-				if (JSON.parse(message).header.messagePurpose == "event") {
-					if (n == "PlayerMessage") {
-						log("<" + JSON.parse(message).body.properties.Sender + "> " + JSON.parse(message).body.properties.Message);
+				try {
+					n = JSON.parse(message).body.eventName
+
+					if (JSON.parse(message).header.messagePurpose == "event") {
+						if (n == "PlayerMessage") {
+							log("<" + JSON.parse(message).body.properties.Sender + "> " + JSON.parse(message).body.properties.Message);
+						}
+					} else {
+
+						if (JSON.parse(message).body.statusMessage != undefined && JSON.parse(message).body.statusCode != -2147483648 && settings.log == true) {
+
+							serverinf("\u00a7d" + JSON.parse(message).body.statusMessage)
+
+						} else if (JSON.parse(message).body.statusMessage != undefined && JSON.parse(message).body.statusCode != -2147483648) {
+
+							log(JSON.parse(message).body.statusMessage)
+
+						} else if (JSON.parse(message).body.statusMessage != undefined) {
+							throw JSON.parse(message).body.statusMessage
+						}
 					}
-				} else {
-                        
-					if (JSON.parse(message).body.statusMessage != undefined&&JSON.parse(message).body.statusCode!=-2147483648&&settings.log==true) {
-						serverinf("\u00a7d"+JSON.parse(message).body.statusMessage)
-					}else if (JSON.parse(message).body.statusMessage != undefined){
-						log(JSON.parse(message).body.statusMessage)
-					}
+					
+				} catch (error) {
+					log(error, "e")
 				}
-			});
+				try{
+					if(settings.debug){
+						log("Received: "+message)
+						}
+				}catch(error) {
+					log(error, "e")
+				}
+			}
+			);
 	});
