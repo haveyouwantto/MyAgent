@@ -4,16 +4,14 @@
 const version = "3.1";
 var settings = {
 	looplimit: -1,//-1: no limit
-	port: 19110,
+	port: 19130,
 	log: true,
 	loopinterval: 500,
-	debug: false,
-	idle:false
+	debug: false
 };
 var test = false;
 var fn = Date.now()
 var a = ""
-var autoreply="\u00a7a【自动回复】 您好,我现在有事不在,一会再和您联系。"
 function log(msg, type = "i") {
 	var c = "";
 	switch (type) {
@@ -39,7 +37,7 @@ console.log("https://github.com/mcpewebsocket-dev/MyAgent");
 console.log("https://npmjs.com/myagent");
 
 process.on("uncaughtException", function (error) {
-	console.log("[ERROR] uncaughtException: %s." , error.message, );
+	console.log("[ERROR] uncaughtException: %s." , error.message);
 	process.exit(3);
 });
 
@@ -91,11 +89,7 @@ try {
 }
 
 console.log("");
-try {
 console.log("\x1b[33m/connect " + network[Object.keys(network)[0]][1].address + ":" + settings.port + "\x1b[0m")
-}catch(error){
-	log(error,"e")
-}
 if (test == true) { process.exit(0); }
 var allws = [];
 var idp = 1;
@@ -114,32 +108,22 @@ rl.on("line", function (line) {
 			log("[SET] log=true");
 			return;
 		}
-		else if (line == "-log") {
+		if (line == "-log") {
 			settings.log = false;
 			log("[SET] log=false");
 			return;
 		}
-		else if (line == "+debug") {
+		if (line == "+debug") {
 			settings.debug = true;
 			log("[SET] debug=true");
 			return;
 		}
-		else if (line == "-debug") {
+		if (line == "-debug") {
 			settings.debug = false;
 			log("[SET] debug=false");
 			return;
 		}
-		else if (line == "+idle") {
-			settings.idle = true;
-			log("[SET] idle=true");
-			return;
-		}
-		else if (line == "-idle") {
-			settings.idle = false;
-			log("[SET] idle=false");
-			return;
-		}
-		else if (line.substring(0, 8) == "-kickid ") {
+		if (line.substring(0, 8) == "-kickid ") {
 			try { findid(parseInt(line.split(" ")[1])).ws.terminate(); } catch (err) { console.log("[KickId] Failed."); return; }
 			log("[KickId] Success.");
 			return;
@@ -465,9 +449,6 @@ wss.on('connection',
 					if (JSON.parse(message).header.messagePurpose == "event") {
 						if (n == "PlayerMessage") {
 							log("<" + JSON.parse(message).body.properties.Sender + "> " + JSON.parse(message).body.properties.Message);
-							if(!JSON.parse(message).body.properties.Message.includes(autoreply)&&settings.idle){
-								serverinf(autoreply)
-							}
 						}
 					} else {
 
