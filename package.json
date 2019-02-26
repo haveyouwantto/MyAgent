@@ -8,7 +8,8 @@
     "myagentctl": "ctlmyagent.js"
   },
   "scripts": {
-    "nop": "exit"
+    "nop": "exit",
+    "start": "node myagent.js"
   },
   "repository": {
     "type": "git",
