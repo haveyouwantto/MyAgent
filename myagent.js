@@ -91,7 +91,11 @@ try {
 }
 
 console.log("");
+try {
 console.log("\x1b[33m/connect " + network[Object.keys(network)[0]][1].address + ":" + settings.port + "\x1b[0m")
+}catch(error){
+	log(error,"e")
+}
 if (test == true) { process.exit(0); }
 var allws = [];
 var idp = 1;
