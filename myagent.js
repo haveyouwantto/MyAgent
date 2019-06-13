@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 
 //Info & Settings
 const version = "3.1";
@@ -8,38 +8,61 @@ var settings = {
 	log: true,
 	loopinterval: 500,
 	debug: false,
-	idle:false
+	idle: false
 };
+var key="";//yandex translate api key
+
+var html = {
+	host: 'baidu.com',
+	port: 80,
+	path: '/index.html'
+};
+var lang=""
 var test = false;
 var fn = Date.now()
 var a = ""
-var autoreply="\u00a7a【自动回复】 您好,我现在有事不在,一会再和您联系。"
+var reg = new RegExp(/"title":".[^"]*"/gm)
+var autoreply = "\u00a7a【自动回复】 您好,我现在有事不在,一会再和您联系。"
 function log(msg, type = "i") {
 	var c = "";
 	switch (type) {
 		case "i":
 			c = "\x1b[00m[INFO] ";
+			console.log(c + new Date().toISOString() + " - " + msg + "\x1b[0m")
 			break;
 		case "w":
 			c = "\x1b[33m[WARN] ";
+			console.warn(c + new Date().toISOString() + " - " + msg + "\x1b[0m")
 			break;
 		case "e":
 			c = "\x1b[31m[ERROR] ";
+			console.error(c + new Date().toISOString() + " - " + msg + "\x1b[0m")
 			break;
 		case "f":
 			c = "\x1b[41m[FATAL] ";
+			console.error(c + new Date().toISOString() + " - " + msg + "\x1b[0m")
+			break;
+			case "d":
+			c = "\x1b[32m[DEBUG] ";
+			console.debug(c + new Date().toISOString() + " - " + msg + "\x1b[0m")
 			break;
 	}
-	console.log(c + new Date().toISOString() + " - " + msg + "\x1b[0m")
-	a = a + (c.substr(5)+new Date().toISOString() + " - " + msg) + "\n"
+	
+	stream.write(c.substr(5) + new Date().toISOString() + " - " + msg) + "\n"
 }
+function currset(){
+	log(JSON.stringify(settings),"d")
+}
+var request = require("request");
+
+
 console.log("MyAgent v%s", version);
 console.log("Author: LNSSPsd");
 console.log("https://github.com/mcpewebsocket-dev/MyAgent");
 console.log("https://npmjs.com/myagent");
 
 process.on("uncaughtException", function (error) {
-	console.log("[ERROR] uncaughtException: %s." , error.message, );
+	console.log("[ERROR] uncaughtException: %s.", error.message);
 	process.exit(3);
 });
 
@@ -68,6 +91,7 @@ if (os.platform() == "win32") {//It only works in windows.
 
 try {
 	var fs = require("fs");
+	var stream = fs.createWriteStream(".\\logs\\"+Date.now() + ".log", { flags: 'a' });
 	try {
 		var settingsstr;
 		settingsstr = fs.readFileSync(process.env.HOME + "/.myagentcfg").toString();
@@ -92,9 +116,9 @@ try {
 
 console.log("");
 try {
-console.log("\x1b[33m/connect " + network[Object.keys(network)[0]][1].address + ":" + settings.port + "\x1b[0m")
-}catch(error){
-	log(error,"e")
+	console.log("\x1b[33m/connect " + network[Object.keys(network)[0]][1].address + ":" + settings.port + "\x1b[0m")
+} catch (error) {
+	log(error, "e")
 }
 if (test == true) { process.exit(0); }
 var allws = [];
@@ -156,7 +180,7 @@ rl.on("line", function (line) {
 						"version": 1
 					},
 					"header": {
-						"requestId": "00000000-0001-0000-000000000000",
+						"requestId": "ffff0000-0000-0000-0000-000000000000",
 						"messagePurpose": "commandRequest",
 						"version": 1,
 						"messageType": "commandRequest"
@@ -174,7 +198,6 @@ function shutdown() {
 	allws.forEach(function (e, i) {
 		try { e.ws.terminate(); } catch (eee) { }
 	});
-	fs.writeFileSync(fn + ".log", a)
 	console.log("\nTerminated all clients.");
 	console.log("Bye.");
 	if (false) { console.log("Goodbye,Expand Dong."); }
@@ -217,7 +240,7 @@ wss.on('connection',
 					"version": 1
 				},
 				"header": {
-					"requestId": "0ffae098-00ff-ffff-abbbbbdf3f44",
+					"requestId": "0ffae098-00ff-ffff-abbb-bbdf3f44",
 					"messagePurpose": "commandRequest",
 					"version": 1,
 					"messageType": "commandRequest"
@@ -235,7 +258,7 @@ wss.on('connection',
 					"version": 1
 				},
 				"header": {
-					"requestId": "00000000-0001-0000-000000000000",
+					"requestId": "ffff0000-0000-0000-0000-00000000",
 					"messagePurpose": "commandRequest",
 					"version": 1,
 					"messageType": "commandRequest"
@@ -247,7 +270,6 @@ wss.on('connection',
 
 
 		function serverinf(msg) {
-			a = a + (Date() + " - " + msg) + "\n"
 			//console.log("[Server] %s",msg);
 			gamecmds("say " + msg);
 
@@ -257,24 +279,24 @@ wss.on('connection',
 
 		log("A new client connected,ID: " + wsi.id);
 
-		/*
+		
 				ws.send(JSON.stringify({
 					"body": {
 						"eventName": "WorldUnloaded"
 					},
 					"header": {
-						"requestId": "233ae098-00ff-ffff-abbbbbbbbbdd3344",
+						"requestId": "233ae098-00ff-ffff-abbb-bbbbbbdd3344",
 						"messagePurpose": "subscribe",
 						"version": 1,
 						"messageType": "commandRequest"
 					}
-				}));
+				}));/*
 				ws.send(JSON.stringify({
 					"body": {
 						"eventName": "BlockBroken"
 					},
 					"header": {
-						"requestId": "fffdb098-00ff-ffff-abbbbbbbbbdd3344",
+						"requestId": "fffdb098-00ff-ffff-abbb-bbbbbbdd3344",
 						"messagePurpose": "subscribe",
 						"version": 1,
 						"messageType": "commandRequest"
@@ -285,7 +307,7 @@ wss.on('connection',
 						"eventName": "BlockPlaced"
 					},
 					"header": {
-						"requestId": "aaaae098-00ff-ffff-abbbbbbbbbdd3344",
+						"requestId": "aaaae098-00ff-ffff-abbb-bbbbbbdd3344",
 						"messagePurpose": "subscribe",
 						"version": 1,
 						"messageType": "commandRequest"
@@ -296,7 +318,7 @@ wss.on('connection',
 						"eventName": "BoardTextUpdated"
 					},
 					"header": {
-						"requestId": "0ffa0000-00ff-ffff-abbbbbbbbbdd3344",
+						"requestId": "0ffa0000-00ff-ffff-abbb-bbbbbbdd3344",
 						"messagePurpose": "subscribe",
 						"version": 1,
 						"messageType": "commandRequest"
@@ -307,7 +329,7 @@ wss.on('connection',
 						"eventName": "AgentCreated"
 					},
 					"header": {
-						"requestId": "0ddbe098-00ff-ffff-abbbbbbbbbdd3344",
+						"requestId": "0ddbe098-00ff-ffff-abbb-bbbbbbdd3344",
 						"messagePurpose": "subscribe",
 						"version": 1,
 						"messageType": "commandRequest"
@@ -318,7 +340,7 @@ wss.on('connection',
 						"eventName": "AgentCommand"
 					},
 					"header": {
-						"requestId": "0ffae090-00ff-ffff-abbbbbbbbbdd3344",
+						"requestId": "0ffae090-00ff-ffff-abbb-bbbbbbdd3344",
 						"messagePurpose": "subscribe",
 						"version": 1,
 						"messageType": "commandRequest"
@@ -329,7 +351,7 @@ wss.on('connection',
 						"eventName": "BossKilled"
 					},
 					"header": {
-						"requestId": "0ffae009-00ff-ffff-abbbbbbbbbdd3344",
+						"requestId": "0ffae009-00ff-ffff-abbb-bbbbbbdd3344",
 						"messagePurpose": "subscribe",
 						"version": 1,
 						"messageType": "commandRequest"
@@ -340,7 +362,7 @@ wss.on('connection',
 						"eventName": "ItemCrafted"
 					},
 					"header": {
-						"requestId": "affae098-00ff-ffff-abbbbbbbbbdd3344",
+						"requestId": "affae098-00ff-ffff-abbb-bbbbbbdd3344",
 						"messagePurpose": "subscribe",
 						"version": 1,
 						"messageType": "commandRequest"
@@ -351,7 +373,7 @@ wss.on('connection',
 						"eventName": "ItemDestroyed"
 					},
 					"header": {
-						"requestId": "effae098-00ff-ffff-abbbbbbbbbdd3344",
+						"requestId": "effae098-00ff-ffff-abbb-bbbbbbdd3344",
 						"messagePurpose": "subscribe",
 						"version": 1,
 						"messageType": "commandRequest"
@@ -362,7 +384,7 @@ wss.on('connection',
 						"eventName": "ItemUsed"
 					},
 					"header": {
-						"requestId": "0f334098-00ff-ffff-abbbbbbbbbdd3344",
+						"requestId": "0f334098-00ff-ffff-abbb-bbbbbbdd3344",
 						"messagePurpose": "subscribe",
 						"version": 1,
 						"messageType": "commandRequest"
@@ -373,18 +395,18 @@ wss.on('connection',
 						"eventName": "MobKilled"
 					},
 					"header": {
-						"requestId": "0ffae098-00ee-ffff-abbbbbbbbbdd3344",
+						"requestId": "0ffae098-00ee-ffff-abbb-bbbbbbdd3344",
 						"messagePurpose": "subscribe",
 						"version": 1,
 						"messageType": "commandRequest"
 					}
-				}));
+				}));*/
 				ws.send(JSON.stringify({
 					"body": {
 						"eventName": "PlayerDied"
 					},
 					"header": {
-						"requestId": "0ffae098-00ff-f333-abbbbbbbbbdd3344",
+						"requestId": "0ffae098-00ff-f333-abbb-bbbbbbdd3344",
 						"messagePurpose": "subscribe",
 						"version": 1,
 						"messageType": "commandRequest"
@@ -395,7 +417,7 @@ wss.on('connection',
 						"eventName": "PlayerJoin"
 					},
 					"header": {
-						"requestId": "0ffae098-00ff-ffff-abbb09bbbbdd3344",
+						"requestId": "0ffae098-00ff-ffff-abbb-09bbbbdd3344",
 						"messagePurpose": "subscribe",
 						"version": 1,
 						"messageType": "commandRequest"
@@ -406,7 +428,7 @@ wss.on('connection',
 						"eventName": "PlayerLeave"
 					},
 					"header": {
-						"requestId": "0ffae098-00ff-ffff-aabbbbbbbbdd3344",
+						"requestId": "0ffae098-00ff-ffff-aabb-bbbbbbdd3344",
 						"messagePurpose": "subscribe",
 						"version": 1,
 						"messageType": "commandRequest"
@@ -417,7 +439,7 @@ wss.on('connection',
 						"eventName": "PlayerTeleported"
 					},
 					"header": {
-						"requestId": "0ffae098-00ff-ffff-abbbbcccbbdd3344",
+						"requestId": "0ffae098-00ff-ffff-abbb-bcccbbdd3344",
 						"messagePurpose": "subscribe",
 						"version": 1,
 						"messageType": "commandRequest"
@@ -428,7 +450,7 @@ wss.on('connection',
 						"eventName": "PortalBuilt"
 					},
 					"header": {
-						"requestId": "0ffae098-00ff-ffff-abbbbbdddbdd3344",
+						"requestId": "0ffae098-00ff-ffff-abbb-bbdddbdd3344",
 						"messagePurpose": "subscribe",
 						"version": 1,
 						"messageType": "commandRequest"
@@ -439,7 +461,7 @@ wss.on('connection',
 						"eventName": "PortalUsed"
 					},
 					"header": {
-						"requestId": "0ffae098-00ff-ffff-abbbbbbbbbdf3344",
+						"requestId": "0ffae098-00ff-ffff-abbb-bbbbbbdf3344",
 						"messagePurpose": "subscribe",
 						"version": 1,
 						"messageType": "commandRequest"
@@ -450,7 +472,7 @@ wss.on('connection',
 				"eventName": "PlayerMessage"
 			},
 			"header": {
-				"requestId": "0ffae098-00ff-ffff-abbbbbbbbbdf3344",
+				"requestId": "0ffae098-00ff-ffff-abbb-bbbbbbdf3344",
 				"messagePurpose": "subscribe",
 				"version": 1,
 				"messageType": "commandRequest"
@@ -464,13 +486,64 @@ wss.on('connection',
 
 					if (JSON.parse(message).header.messagePurpose == "event") {
 						if (n == "PlayerMessage") {
-							log("<" + JSON.parse(message).body.properties.Sender + "> " + JSON.parse(message).body.properties.Message);
-							if(!JSON.parse(message).body.properties.Message.includes(autoreply)&&settings.idle){
-								serverinf(autoreply)
+							var chat = JSON.parse(message).body.properties.Message//玩家消息
+							var name = JSON.parse(message).body.properties.Sender//玩家名字
+							log("<" + name + "> " + chat);
+							if (name != "外部") {
+								if (!chat.includes(autoreply) && settings.idle) {//挂机功能
+									serverinf(autoreply)
+								} 
+								//自动百度
+								else if (chat.includes("百度")) {
+									if (chat.endsWith("百度") || chat.includes("百度吗")) {
+										serverinf("百度什么？")
+									} else if (!chat.endsWith("百度什么？") && !chat.includes("百度吗")) {
+										var query = chat.substring(chat.search("百度") + 2)
+										serverinf("§4百§1度§r:")
+										log(query)
+										try {
+											request({ uri: "http://www.baidu.com/s?wd=" + encodeURI(query) },
+												function (error, response, body) {
+													log(error)
+													var array = body.match(reg)
+													array.forEach(function (element) {
+														serverinf("§b" + JSON.parse("{" + element + "}").title);
+													}
+													)
+												});
+										} catch (err) {
+											log(err, "e")
+										}
+									}
+								}else{
+									try {
+										request({ uri: "https://translate.yandex.net/api/v1.5/tr.json/detect?key="+key+"&text="+ encodeURI(chat) },
+												function (error, response, body) {
+													log(error)
+													lang=JSON.parse(body).lang
+													if(lang!="zh"){
+														try {
+															log(lang,"d")
+															request({ uri: "https://translate.yandex.net/api/v1.5/tr.json/translate?key="+key+"&text="+ encodeURI(chat)+"&lang="+lang+"-zh"  },
+																	function (error, response, body) {
+																		log(error)
+																		log(body,"d")
+																		var t=JSON.parse(body)
+																		serverinf("§4[翻译] §c"+lang+"->zh §d"+name+": "+t.text);
+																	});
+														}catch(e){
+															log(e,"e")
+														}}
+												});
+									}catch(e){
+										log(e,"e")
+									}
+									
+								}
 							}
 						}
 					} else {
-
+						
 						if (JSON.parse(message).body.statusMessage != undefined && JSON.parse(message).body.statusCode != -2147483648 && settings.log == true) {
 
 							serverinf("\u00a7d" + JSON.parse(message).body.statusMessage)
@@ -483,17 +556,19 @@ wss.on('connection',
 							throw JSON.parse(message).body.statusMessage
 						}
 					}
-					
+
 				} catch (error) {
 					log(error, "e")
 				}
-				try{
-					if(settings.debug){
-						log("Received: "+message)
-						}
-				}catch(error) {
+				try {
+					if (settings.debug) {
+						log("Received: " + message,"d")
+					}
+				} catch (error) {
 					log(error, "e")
 				}
 			}
-			);
+		);
 	});
+	wss.on('close', function (msg) {
+	})
