@@ -62,7 +62,7 @@ console.log("https://github.com/mcpewebsocket-dev/MyAgent");
 console.log("https://npmjs.com/myagent");
 
 process.on("uncaughtException", function (error) {
-	console.log("[ERROR] uncaughtException: %s.", error.message);
+	console.log("[ERROR] uncaughtException: %s." , error.message);
 	process.exit(3);
 });
 
