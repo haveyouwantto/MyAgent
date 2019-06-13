@@ -10,7 +10,7 @@ var settings = {
 	debug: false,
 	idle: false
 };
-var key="";//yandex translate api key
+var key="trnsl.1.1.20181016T200703Z.a98c024489ef7739.25209d509075025dbcecce0de662f5ffea842317";//yandex translate api key
 
 var html = {
 	host: 'baidu.com',
